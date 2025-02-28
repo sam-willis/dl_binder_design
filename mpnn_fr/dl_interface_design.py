@@ -78,30 +78,35 @@ class sample_features():
     
     def parse_fixed_res(self):
         '''
-            Parse which residues are fixed from the residue remarks
+        Parse which residues are fixed from the residue remarks
         '''
-
         # Iterate over the residue positions in this pose and check if they are fixed
         fixed_list = []
 
-        endA = self.pose.split_by_chain()[1].total_residue()
-        for resi in range1( endA ):
-            reslabels = self.pose.pdb_info().get_reslabels( resi )
+        # Get ordered unique chainIDs for the pose
+        self.chains = list(OrderedDict.fromkeys([self.pose.pdb_info().chain(i) for i in range1(self.pose.total_residue())]))
+
+        # For single chain proteins, use the total residue count
+        if len(self.chains) == 1:
+            endA = self.pose.total_residue()
+        else:
+            endA = self.pose.split_by_chain()[1].total_residue()
+
+        for resi in range1(endA):
+            reslabels = self.pose.pdb_info().get_reslabels(resi)
 
             if len(reslabels) == 0: continue
 
-            if str(self.pose.pdb_info().get_reslabels( resi )[1]).strip() == 'FIXED':
-                fixed_list.append( resi )
-
-        # Get ordered unique chainIDs for the pose
-        # The last chain (B) is the target and will have a fixed sequence
-        self.chains = list( OrderedDict.fromkeys( [ self.pose.pdb_info().chain(i) for i in range1( self.pose.total_residue() ) ] ) )
+            if str(self.pose.pdb_info().get_reslabels(resi)[1]).strip() == 'FIXED':
+                fixed_list.append(resi)
 
         # Create the fixed res dict, this will be input to ProteinMPNN
         self.fixed_res = {
-            self.chains[0]: fixed_list,
-            self.chains[1]: []
+            self.chains[0]: fixed_list
         }
+        # If there's a second chain, add it to fixed_res
+        if len(self.chains) > 1:
+            self.fixed_res[self.chains[1]] = []
     
     def thread_mpnn_seq(self, binder_seq):
         '''
@@ -197,11 +202,17 @@ class ProteinMPNN_runner():
 
         os.remove(pdbfile)
 
-        arg_dict = mpnn_util.set_default_args( self.seqs_per_struct, omit_AAs=self.omit_AAs )
+        arg_dict = mpnn_util.set_default_args(self.seqs_per_struct, omit_AAs=self.omit_AAs)
         arg_dict['temperature'] = self.temperature
 
-        masked_chains  = sample_feats.chains[:-1]
-        visible_chains = [sample_feats.chains[-1]]
+        # For single chain, we design the whole chain except fixed residues
+        if len(sample_feats.chains) == 1:
+            masked_chains = sample_feats.chains
+            visible_chains = []
+        else:
+            # For multiple chains, keep original behavior
+            masked_chains = sample_feats.chains[:-1]
+            visible_chains = [sample_feats.chains[-1]]
 
         fixed_positions_dict = {pdbfile[:-len('.pdb')]: sample_feats.fixed_res}
 
