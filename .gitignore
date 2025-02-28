@@ -3,3 +3,5 @@ __pycache__/
 **/__pycache__/
 
 test/
+
+af2_initial_guess/model_weights/params/
