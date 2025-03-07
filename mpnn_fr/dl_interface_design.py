@@ -429,28 +429,28 @@ class StructManager():
 ####################
 ####### Main #######
 ####################
+if __name__ == "__main__":
+    struct_manager     = StructManager(args)
+    proteinmpnn_runner = ProteinMPNN_runner(args, struct_manager)
 
-struct_manager     = StructManager(args)
-proteinmpnn_runner = ProteinMPNN_runner(args, struct_manager)
+    for pdb in struct_manager.iterate():
 
-for pdb in struct_manager.iterate():
+        if args.debug: proteinmpnn_runner.run_model(pdb, args)
 
-    if args.debug: proteinmpnn_runner.run_model(pdb, args)
+        else: # When not in debug mode the script will continue to run even when some poses fail
+            t0 = time.time()
 
-    else: # When not in debug mode the script will continue to run even when some poses fail
-        t0 = time.time()
+            try: proteinmpnn_runner.run_model(pdb, args)
 
-        try: proteinmpnn_runner.run_model(pdb, args)
+            except KeyboardInterrupt: sys.exit( "Script killed by Control+C, exiting" )
 
-        except KeyboardInterrupt: sys.exit( "Script killed by Control+C, exiting" )
+            except:
+                seconds = int(time.time() - t0)
+                print( "Struct with tag %s failed in %i seconds with error: %s"%( pdb, seconds, sys.exc_info()[0] ) )
 
-        except:
-            seconds = int(time.time() - t0)
-            print( "Struct with tag %s failed in %i seconds with error: %s"%( pdb, seconds, sys.exc_info()[0] ) )
-
-    # We are done with one pdb, record that we finished
-    struct_manager.record_checkpoint(pdb)
-    
+        # We are done with one pdb, record that we finished
+        struct_manager.record_checkpoint(pdb)
+        
 
 
 
