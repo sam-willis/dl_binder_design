@@ -275,8 +275,9 @@ def generate_sequences( model, device, feature_dict, arg_dict, masked_chains, vi
         native_score = scores.cpu().data.numpy()
 
         for j in range(arg_dict['NUM_BATCHES']):
-            randn_2 = torch.randn(chain_M.shape).to(device)
-
+            # TODO: this is the source of randomness in MPNN
+            # randn_2 = torch.randn(chain_M.shape).to(device)
+            randn_2 = torch.zeros(chain_M.shape).to(device)
             sample_dict = model.sample(
                     X,
                     randn_2,
