@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+from pathlib import Path
 import numpy as np
 import sys
 
@@ -285,6 +286,7 @@ class AF2_runner():
         print(f'Processing struct with tag: {feat_holder.tag}')
 
         # Generate features
+        # should probably NaN out the initial guess to ensure that the model doesn't use it
         feature_dict, initial_guess = self.featurize(feat_holder)
 
         # Run model
@@ -391,8 +393,11 @@ class StructManager():
         Record the fact that this tag has been processed.
         Write this tag to the list of finished structs
         '''
-        with open(self.chkfn, 'a') as f:
-            f.write(f'{tag}\n')
+        chkfn = Path(self.chkfn)
+        if not chkfn.parent.exists():
+            chkfn.parent.mkdir(parents=True, exist_ok=True)
+
+        chkfn.write_text(f'{tag}\n')
 
     def iterate(self):
         '''
