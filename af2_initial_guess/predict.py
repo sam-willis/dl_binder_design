@@ -99,7 +99,7 @@ class AF2_runner():
         self.struct_manager = struct_manager
 
         # Other models may be run but their weights will also need to be downloaded
-        self.model_name = "model_1_ptm"
+        self.model_name = "model_4_ptm"
 
         model_config = config.model_config(self.model_name)
         model_config.data.eval.num_ensemble = 1
