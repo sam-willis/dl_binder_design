@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+from pathlib import Path
 import numpy as np
 import sys
 
@@ -98,7 +99,7 @@ class AF2_runner():
         self.struct_manager = struct_manager
 
         # Other models may be run but their weights will also need to be downloaded
-        self.model_name = "model_1_ptm"
+        self.model_name = "model_4_ptm"
 
         model_config = config.model_config(self.model_name)
         model_config.data.eval.num_ensemble = 1
@@ -285,6 +286,7 @@ class AF2_runner():
         print(f'Processing struct with tag: {feat_holder.tag}')
 
         # Generate features
+        # should probably NaN out the initial guess to ensure that the model doesn't use it
         feature_dict, initial_guess = self.featurize(feat_holder)
 
         # Run model
@@ -355,6 +357,8 @@ class StructManager():
 
         # Assert that either silent or pdb is true, but not both
         assert(self.silent ^ self.pdb), f'Both silent and pdb are set to {args.silent} and {args.pdb} respectively. Only one of these may be active at a time'
+        sort_fn = lambda x: int(Path(x).stem.split('_')[1])
+        self.struct_iterator = sorted(self.struct_iterator, key=sort_fn)
 
         # Setup checkpointing
         self.chkfn = args.checkpoint_name
@@ -391,8 +395,11 @@ class StructManager():
         Record the fact that this tag has been processed.
         Write this tag to the list of finished structs
         '''
-        with open(self.chkfn, 'a') as f:
-            f.write(f'{tag}\n')
+        chkfn = Path(self.chkfn)
+        if not chkfn.parent.exists():
+            chkfn.parent.mkdir(parents=True, exist_ok=True)
+
+        chkfn.write_text(f'{tag}\n')
 
     def iterate(self):
         '''

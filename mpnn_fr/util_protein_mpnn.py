@@ -275,8 +275,8 @@ def generate_sequences( model, device, feature_dict, arg_dict, masked_chains, vi
         native_score = scores.cpu().data.numpy()
 
         for j in range(arg_dict['NUM_BATCHES']):
+            # let's see how this affects the results
             randn_2 = torch.randn(chain_M.shape).to(device)
-
             sample_dict = model.sample(
                     X,
                     randn_2,
