@@ -399,7 +399,12 @@ class StructManager():
         if not chkfn.parent.exists():
             chkfn.parent.mkdir(parents=True, exist_ok=True)
 
-        chkfn.write_text(f'{tag}\n')
+        # Append to the checkpoint file instead of overwriting it
+        with open(chkfn, 'a') as f:
+            f.write(f'{tag}\n')
+        
+        # Update the in-memory set of finished structs
+        self.finished_structs.add(tag)
 
     def iterate(self):
         '''
