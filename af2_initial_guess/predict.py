@@ -413,13 +413,13 @@ class StructManager():
 
         # Iterate over the structs and for each, check that the struct has not already been processed
         for struct in self.struct_iterator:
-            if self.pdb:
-                tag = '.'.join(os.path.basename(struct).split('.')[:-1])
-            else:
-                tag = struct    
+            #if self.pdb:
+            #    tag = '.'.join(os.path.basename(struct).split('.')[:-1])
+            #else:
+            #    tag = struct    
 
-            if tag in self.finished_structs:
-                print(f'{tag} has already been processed. Skipping')
+            if struct in self.finished_structs:
+                print(f'{struct} has already been processed. Skipping')
                 continue
 
             yield struct
