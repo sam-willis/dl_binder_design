@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import random
 import os, sys
 
 from pyrosetta import *
@@ -64,7 +65,7 @@ parser.add_argument( "-protein_features", type=str, default='full', help='What t
 parser.add_argument( "-omit_AAs", type=str, default='CX', help='A string of all residue types (one letter case-insensitive) that you would not like to use for design. Letters not corresponding to residue types will be ignored (default: CX)' )
 parser.add_argument( "-bias_AA_jsonl", type=str, default='', help='The path to a JSON file containing a dictionary mapping residue one-letter names to the bias for that residue eg. {A: -1.1, F: 0.7} (default: ''; no bias)' )
 parser.add_argument( "-num_connections", type=int, default=48, help='Number of neighbors each residue is connected to. Do not mess around with this argument unless you have a specific set of ProteinMPNN weights which expects a different number of connections. (default: 48)' )
-
+parser.add_argument( "-seed", type=int, default=None, help='The seed to use for the random number generator. If not provided, the random number generator will not be seeded. (default: None)' )
 args = parser.parse_args( sys.argv[1:] )
 
 class sample_features():
@@ -425,11 +426,23 @@ class StructManager():
         
         return pose
 
+def make_deterministic(seed=0):
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 ####################
 ####### Main #######
 ####################
 if __name__ == "__main__":
+    # Set the seed
+    if args.seed is not None:
+        make_deterministic(args.seed)
+
     struct_manager     = StructManager(args)
     proteinmpnn_runner = ProteinMPNN_runner(args, struct_manager)
 
